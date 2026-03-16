@@ -7,10 +7,19 @@ import re
 import numpy as np
 from collections import Counter
 
+from config import config
 
-def tokenize(text: str) -> list[str]:
-    """Lowercase and extract words (letters + apostrophe for contractions)."""
-    return re.findall(r"[a-z']+", text.lower())
+
+def tokenize(text: str, remove_stopwords: bool = True, min_length: int = 1) -> tuple[list[str], int, int]:
+    """Lowercase and extract words (letters + apostrophe). If remove_stopwords: drop stopwords and words shorter than min_length.
+    Returns: (tokens, n_total, n_after_filters)."""
+    tokens_raw = re.findall(r"[a-z']+", text.lower())
+    n_total = len(tokens_raw)
+    if remove_stopwords:
+        tokens = [t for t in tokens_raw if t not in config.stopwords and len(t) >= min_length]
+    else:
+        tokens = tokens_raw
+    return tokens, n_total, len(tokens)
 
 
 def build_vocab(tokens: list[str], min_count: int = 1) -> tuple[dict, dict, list]:

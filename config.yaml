@@ -1,0 +1,46 @@
+corpus: trump_rallies.txt
+min_count: 3
+min_length: 3
+dim: 128
+epochs: 10
+window: 5
+negatives: 5
+lr: 0.025
+seed: 42
+max_tokens: null
+show_neighbors: false
+keep_stopwords: false
+
+stopwords:
+  - a
+  - an
+  - and
+  - are
+  - as
+  - at
+  - be
+  - by
+  - for
+  - from
+  - has
+  - he
+  - in
+  - is
+  - it
+  - its
+  - of
+  - on
+  - that
+  - the
+  - to
+  - was
+  - were
+  - will
+  - with
+
+default_neighbor_words:
+  - trump
+  - america
+  - people
+  - great
+  - election
