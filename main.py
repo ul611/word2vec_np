@@ -7,16 +7,8 @@ import argparse
 from pathlib import Path
 
 from data import build_vocab, tokenize, tokens_to_ids
-
-
-def create_model(vocab_size: int, embedding_dim: int):
-    """Create skip-gram model (W_in, W_out)."""
-    raise NotImplementedError("create_model")
-
-
-def train(model, ids, word_counts, word2idx, idx2word, **kwargs):
-    """Train model on token ids."""
-    raise NotImplementedError("train")
+from model import create_model
+from train import train
 
 
 def main():
@@ -25,6 +17,10 @@ def main():
     parser.add_argument("--min-count", type=int, default=1, help="Min word count for vocabulary")
     parser.add_argument("--dim", type=int, default=64, help="Embedding dimension")
     parser.add_argument("--epochs", type=int, default=10, help="Training epochs")
+    parser.add_argument("--window", type=int, default=5, help="Context window size")
+    parser.add_argument("--negatives", type=int, default=5, help="Negative samples per pair")
+    parser.add_argument("--lr", type=float, default=0.025, help="Learning rate")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed")
     args = parser.parse_args()
 
     corpus_path = args.corpus or (Path(__file__).parent / "trump_rallies.txt")
@@ -40,15 +36,8 @@ def main():
 
     print(f"Tokens: {len(tokens):,}, vocab size: {vocab_size}")
 
-    model = create_model(vocab_size, args.dim)
-    train(
-        model,
-        ids,
-        word_counts=word_counts,
-        word2idx=word2idx,
-        idx2word=idx2word,
-        epochs=args.epochs,
-    )
+    model = create_model(vocab_size, args.dim, seed=args.seed)
+    train(model, ids, window_size=args.window, epochs=args.epochs)
 
 
 if __name__ == "__main__":
