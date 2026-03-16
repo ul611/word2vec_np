@@ -5,6 +5,7 @@ Training loop for skip-gram with negative sampling.
 import numpy as np
 
 from data import generate_training_pairs, build_unigram_table, sample_negatives
+from neighbors import nearest_neighbors
 
 
 def _sigmoid(x: np.ndarray, clip_value: float = 500.0) -> np.ndarray:
@@ -30,10 +31,12 @@ def _forward(
     sigma_pos = _sigmoid(np.array([s_pos]))[0]
     sigma_negs = _sigmoid(s_negs)
 
+    # Loss: -log σ(s_pos) - Σ log σ(-s_neg)
     loss_pos = -np.log(sigma_pos + 1e-10)
     loss_negs = -np.sum(np.log(1.0 - sigma_negs + 1e-10))
     loss = loss_pos + loss_negs
 
+    # Gradients: dL/ds_pos = σ-1, dL/ds_neg = σ
     d_pos = sigma_pos - 1.0
     d_negs = sigma_negs
 
@@ -46,6 +49,7 @@ def _forward(
 
 def _train_step(center_id: int, context_id: int, neg_ids: np.ndarray, W_in: np.ndarray, W_out: np.ndarray, lr: float) -> float:
     loss, grad_v_c, grad_v_w, grad_v_negs = _forward(center_id, context_id, neg_ids, W_in, W_out)
+    # Parameter update (SGD)
     W_in[center_id] -= lr * grad_v_c
     W_out[context_id] -= lr * grad_v_w
     for k, n in enumerate(neg_ids):
@@ -62,6 +66,10 @@ def train(
     epochs: int = 5,
     lr: float = 0.025,
     seed: int = 42,
+    show_neighbors: bool = False,
+    neighbor_words: list = None,
+    word2idx: dict = None,
+    idx2word: dict = None,
 ):
     """Train skip-gram with negative sampling. Returns W_in, W_out."""
     W_in, W_out = model
@@ -87,5 +95,9 @@ def train(
 
         avg_loss = total_loss / n_pairs
         print(f"Epoch {epoch + 1}/{epochs}  loss={avg_loss:.4f}")
+        if show_neighbors and neighbor_words and word2idx and idx2word:
+            print(f"  Epoch {epoch + 1} neighbors:")
+            for word in neighbor_words:
+                nearest_neighbors(W_in, word, word2idx, idx2word)
 
     return W_in, W_out
