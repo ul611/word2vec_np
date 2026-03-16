@@ -39,6 +39,37 @@ def tokens_to_ids(tokens: list[str], word2idx: dict) -> np.ndarray:
     return np.array([word2idx.get(w, word2idx["<unk>"]) for w in tokens], dtype=np.int64)
 
 
+def build_unigram_table(
+    word_counts: list,
+    table_size: int = int(1e6),
+    power: float = 0.75,
+    seed: int | None = None,
+) -> np.ndarray:
+    """Unigram table for negative sampling. P(w) ∝ count^power."""
+    rng = np.random.default_rng(seed)
+    counts = np.array(word_counts, dtype=np.float64)
+    counts = np.power(counts, power)
+    probs = counts / counts.sum()
+    return rng.choice(len(probs), size=table_size, p=probs)
+
+
+def sample_negatives(
+    num_negatives: int,
+    exclude: set[int],
+    unigram_table: np.ndarray,
+    table_idx: int,
+) -> tuple[np.ndarray, int]:
+    """Sample negative indices from unigram table."""
+    negs = []
+    table_len = len(unigram_table)
+    while len(negs) < num_negatives:
+        idx = int(unigram_table[table_idx % table_len])
+        table_idx += 1
+        if idx not in exclude:
+            negs.append(idx)
+    return np.array(negs, dtype=np.int64), table_idx
+
+
 def generate_training_pairs(ids: np.ndarray, window_size: int) -> list[tuple[int, int]]:
     """Generate (center, context) pairs for skip-gram."""
     pairs = []

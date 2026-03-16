@@ -37,7 +37,16 @@ def main():
     print(f"Tokens: {len(tokens):,}, vocab size: {vocab_size}")
 
     model = create_model(vocab_size, args.dim, seed=args.seed)
-    train(model, ids, window_size=args.window, epochs=args.epochs)
+    train(
+        model,
+        ids,
+        word_counts=word_counts,
+        window_size=args.window,
+        num_negatives=args.negatives,
+        epochs=args.epochs,
+        lr=args.lr,
+        seed=args.seed,
+    )
 
 
 if __name__ == "__main__":
